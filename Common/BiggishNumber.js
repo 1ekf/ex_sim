@@ -217,7 +217,7 @@ export class BiggishNumber {
 
 
     comp(that) {
-        if (!(that instanceof BiggishNumber)) return this.gr(BiggishNumber.from(that));
+        if (!(that instanceof BiggishNumber)) return this.comp(BiggishNumber.from(that));
 
         if (this.m < 0) {
             if (that.m >= 0) return -1;
