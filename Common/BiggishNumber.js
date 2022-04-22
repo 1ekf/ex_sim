@@ -36,6 +36,10 @@ export class BiggishNumber {
         return (this.m != 0) ? (this.e ? `${this.m}e${this.e}` : `${this.m}`) : "0"
     }
 
+    copy() {
+        return new BiggishNumber(this.m, this.e);
+    }
+
     resolve() {
         if (this.m == 0) {
             this.e = -Infinity
@@ -44,6 +48,9 @@ export class BiggishNumber {
             this.e += 1;
         } else if (this.m >= 1 || this.m <= -1) {
             // noop
+        } else if (this.m >= 0.1 || this.m <= -0.1) {
+            this.m *= 10;
+            this.e -= 1;
         } else {
             const diffe = Math.floor(Math.log10(Math.abs(this.m)));
             this.m *= Math.pow(10, -diffe);
@@ -62,7 +69,21 @@ export class BiggishNumber {
         const newm = this.m + that.m * Math.pow(10, that.e - this.e);
 
         return BiggishNumber.makeResolved(newm, this.e);
-        
+    }
+
+    dPlus(that) {
+        if (!(that instanceof BiggishNumber)) return this.dPlus(BiggishNumber.from(that));
+
+        if (this.m == 0) return that;
+        if (that.m == 0) return this;
+
+        if (this.e < that.e) return that.plus(this);
+
+        this.m += that.m * Math.pow(10, that.e - this.e);
+
+        this.resolve();
+
+        return this;
     }
 
     times(that) {
@@ -71,6 +92,19 @@ export class BiggishNumber {
         if (this.m == 0 || that.m == 0) return BiggishNumber.ZERO;
 
         return BiggishNumber.makeResolved(this.m * that.m, this.e + that.e);
+    }
+
+    dTimes(that) {
+        if (!(that instanceof BiggishNumber)) return this.dTimes(BiggishNumber.from(that));
+
+        if (this.m == 0 || that.m == 0) return this.toZero();
+
+        this.m *= that.m;
+        this.e += that.e;
+
+        this.resolve();
+
+        return this;
     }
 
     minus(that) {
@@ -82,12 +116,33 @@ export class BiggishNumber {
         return this.plus(new BiggishNumber(-that.m, that.e));
     }
 
+    dMinus(that) {
+        if (!(that instanceof BiggishNumber)) return this.dMinus(BiggishNumber.from(that));
+
+        if (that.m == 0) return this;
+
+        that.m *= -1;
+        return this.dPlus(that);
+    }
+
     div(that) {
         if (!(that instanceof BiggishNumber)) return this.div(BiggishNumber.from(that));
 
         if (that.m == 0) throw "division by zero";
 
         return this.times(BiggishNumber.makeResolved(1/that.m, -that.e));
+    }
+
+    dDiv(that) {
+        if (!(that instanceof BiggishNumber)) return this.div(BiggishNumber.from(that));
+
+        if (that.m == 0) throw "division by zero";
+
+        this.m /= that.m;
+        this.e -= that.e;
+
+        this.resolve();
+        return this;
     }
 
     sqrt() {
@@ -102,13 +157,30 @@ export class BiggishNumber {
         return new BiggishNumber(newm, Math.trunc(this.e / 2));
     }
 
+    dSqrt() {
+        if (this.m < 0) throw "sqrt of negative";
+        if (this.m == 0) return this.toZero();
+
+        this.m = Math.sqrt(this.m);
+        if (this.e % 2) {
+            this.m *= Math.sqrt(10);
+        }
+        this.e = Math.trunc(this.e / 2)
+
+        return this;
+    }
+
     log(b) {
         if (this.m <= 0) throw "log of nonpositive";
         if (b <= 0) throw "log base nonpositive"
         
         b = b ?? 10;
 
-        return BiggishNumber.from(Math.log(this.m) / Math.log(b) * this.e);
+        return BiggishNumber.from((Math.log10(this.m) + this.e) / Math.log10(b) );
+    }
+
+    dLog(b) {
+        return this.log(b);
     }
 
     pow(x) {
@@ -117,12 +189,32 @@ export class BiggishNumber {
 
         const mpart = BiggishNumber.fromPow(this.m, x);
         const eraw = this.e * x;
-        if (Number.isInteger(eraw)) return new BiggishNumber(mpart.m, mpart.e + eraw);
+        if (Number.isInteger(eraw)) {
+            mpart.e += eraw;
+            return mpart;
+        }
 
         const epart = BiggishNumber.fromPow(10, eraw);
 
         return mpart.times(epart);
     }
+
+    dPow(x) {
+        if (this.m < 0) throw "pow of negative";
+        if (this.m == 0) return this.toZero();
+
+        const mpart = BiggishNumber.fromPow(this.m, x);
+        const eraw = this.e * x;
+        if (Number.isInteger(eraw)) {
+            mpart.e += eraw;
+            return mpart;
+        }
+
+        const epart = BiggishNumber.fromPow(10, eraw);
+
+        return mpart.dTimes(epart);
+    }
+
 
     comp(that) {
         if (!(that instanceof BiggishNumber)) return this.gr(BiggishNumber.from(that));
@@ -165,6 +257,12 @@ export class BiggishNumber {
 
     lt(that) { return this.comp(that) == -1; }
 
+    toZero() {
+        this.m = 0;
+        this.e = -Infinity;
+        return this;
+    };
+
     toInt() {
         if (this.m == 0) return 0;
         return Math.trunc(this.m * Math.pow(10, this.e));
@@ -179,8 +277,8 @@ BiggishNumber.ZERO = BiggishNumber.makeResolved(0, 0);
 BiggishNumber.ONE = BiggishNumber.makeResolved(1, 0);
 BiggishNumber.TWO = BiggishNumber.makeResolved(2, 0);
 BiggishNumber.TEN = BiggishNumber.makeResolved(10, 0);
+BiggishNumber.INF = new BiggishNumber(1, Infinity)
 
-console.log(BiggishNumber.TEN.toString())
 
 // var tick = (elapsedTime, multiplier) => {
 //     let tickspeed = getTickspeed();

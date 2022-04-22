@@ -5,7 +5,7 @@ export class Utils {
     static getStepwisePowerSum(level, basePower, stepLength, offset) { 
         const quotient = Math.floor(level / stepLength);
         const remainder = level - quotient * stepLength;
-        return BiggishNumber.fromPow(basePower, quotient).minus(1).times(stepLength / (basePower - 1) + remainder).plus(remainder + offset);
+        return BiggishNumber.fromPow(basePower, quotient).dMinus(1).dTimes(stepLength / (basePower - 1) + remainder).dPlus(remainder + offset);
     }
 
     static makeVariable(curId, cost) {
