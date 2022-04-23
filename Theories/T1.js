@@ -114,8 +114,6 @@ export class T1 {
 
         this.tau = this.tau.max(this.currency[0]);
 
-        this.timeResidue = 0;
-
         return;
     }
 
@@ -142,6 +140,8 @@ export class T1 {
         this.vc2 = T1.getC2(this.c2.level);
         this.vc3 = T1.getC3(this.c3.level);
         this.vc4 = T1.getC4(this.c4.level);
+
+        this.timeResidue = 0;
     }
 
     static getPublicationMultiplier(tau) { return tau.pow(0.164).dDiv(3); }
