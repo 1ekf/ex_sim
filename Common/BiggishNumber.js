@@ -219,14 +219,14 @@ export class BiggishNumber {
     comp(that) {
         if (!(that instanceof BiggishNumber)) return this.comp(BiggishNumber.from(that));
 
-        if (this.m < 0) {
-            if (that.m >= 0) return -1;
-            if (this.e < that.e) return 1;
-            if (this.e > that.e) return -1;
-        } else if (this.m > 0){
+        if (this.m > 0){
             if (that.m <= 0) return 1;
             if (this.e < that.e) return -1;
             if (this.e > that.e) return 1;
+        } else if (this.m < 0) {
+            if (that.m >= 0) return -1;
+            if (this.e < that.e) return 1;
+            if (this.e > that.e) return -1;
         }
 
         if (this.m < that.m) return -1;
@@ -278,35 +278,3 @@ BiggishNumber.ONE = BiggishNumber.makeResolved(1, 0);
 BiggishNumber.TWO = BiggishNumber.makeResolved(2, 0);
 BiggishNumber.TEN = BiggishNumber.makeResolved(10, 0);
 BiggishNumber.INF = new BiggishNumber(1, Infinity)
-
-
-// var tick = (elapsedTime, multiplier) => {
-//     let tickspeed = getTickspeed();
-
-//     if (tickspeed.isZero)
-//         return;
-
-//     let timeLimit = 1 / tickspeed.Min(BigNumber.TEN).toNumber();
-//     time += elapsedTime;
-
-//     if (time >= timeLimit - 1e-8) {
-//         let tickPower = tickspeed * BigNumber.from(time * multiplier);
-
-//         rhoNm2 = rhoNm1;
-//         rhoNm1 = rhoN;
-//         rhoN = currency.value;
-
-//         let bonus = theory.publicationMultiplier;
-//         let vc1 = getC1(c1.level).pow(getC1Exponent(c1Exp.level));
-//         let vc2 = getC2(c2.level);
-//         let vc3 = getC3(c3.level);
-//         let vc4 = getC4(c4.level);
-//         let term1 = vc1 * vc2 * (logTerm.level > 0 ? BigNumber.ONE + rhoN.Max(BigNumber.ONE).log() / BigNumber.HUNDRED : BigNumber.ONE);
-//         let term2 = c3Term.level > 0 ? (vc3 * rhoNm1.pow(0.2)) : BigNumber.ZERO;
-//         let term3 = c4Term.level > 0 ? (vc4 * rhoNm2.pow(0.3)) : BigNumber.ZERO;
-
-//         currency.value = rhoN + bonus * tickPower * (term1 + term2 + term3) + epsilon;
-
-//         time = 0;
-//     }
-// }

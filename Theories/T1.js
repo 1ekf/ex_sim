@@ -23,6 +23,8 @@ export class T1 {
         t1.tau = BiggishNumber.ONE;
         t1.publicationMultiplier = BiggishNumber.ONE;
 
+        t1.timeResidue = 0;
+
         t1.resetHelpers();
 
         return t1;
@@ -41,6 +43,8 @@ export class T1 {
             name => t1[name].level = this[name].level
         )
 
+        t1.timeResidue = this.timeResidue;
+
         return t1;
     }
 
@@ -52,12 +56,12 @@ export class T1 {
         if (this.currency[vari.curId].lt(vari.cost.getCost(vari.level))) return false;
 
         if (quantity < 0) {
-            const delta = vari.cost.getMax(vari.level, this.currency);
+            const delta = vari.cost.getMax(vari.level, this.currency[vari.curId]);
             if (delta > 0) {
                 const price = vari.cost.getSum(vari.level, vari.level + delta);
                 this.currency[vari.curId] = this.currency[vari.curId].minus(price);
                 vari.level += delta;
-            } 
+            }
         } else {
             const price = vari.cost.getSum(vari.level, vari.level + quantity);
             if (this.currency[vari.curId].ge(price)) {
@@ -88,12 +92,14 @@ export class T1 {
         return true;
     }
 
-    tick(elapsedTime, multiplier, r9) { // returns remaining time
-        if (BiggishNumber.ZERO.eq(this.tickspeed)) return 0;
+    tick(elapsedTime, multiplier, r9) {
+        if (BiggishNumber.ZERO.eq(this.tickspeed)) return;
 
-        if (this.tickspeed.times(elapsedTime).dPlus(epsilon).lt(BiggishNumber.ONE)) return elapsedTime;
+        this.timeResidue += elapsedTime;
 
-        const tickPower = this.tickspeed.times(elapsedTime * multiplier);
+        if (this.tickspeed.times(this.timeResidue).dPlus(epsilon).lt(BiggishNumber.ONE)) return;
+
+        const tickPower = this.tickspeed.times(this.timeResidue * multiplier);
 
         this.rhoNm2 = this.rhoNm1;
         this.rhoNm1 = this.rhoN;
@@ -108,7 +114,13 @@ export class T1 {
 
         this.tau = this.tau.max(this.currency[0]);
 
-        return 0;
+        this.timeResidue = 0;
+
+        return;
+    }
+
+    getRatio() {
+        return T1.getPublicationMultiplier(this.tau).dDiv(this.publicationMultiplier);
     }
 
     publish() {
